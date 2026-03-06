@@ -325,6 +325,27 @@ services:
       CONFIG: ${CONFIG:-debug}
       SB_API_VERSION: ${SB_API_VERSION}
 
+  build-rdk:
+    <<: *build-common-definitions
+    build:
+      context: ./docker/linux/rdk
+      dockerfile: ./Dockerfile
+    image: cobalt-build-rdk
+    environment:
+      <<: *shared-build-env
+
+  rdk:
+    <<: *build-common-definitions
+    build:
+      context: ./docker/linux/rdk
+      dockerfile: ./Dockerfile
+    image: cobalt-build-rdk
+    environment:
+      <<: *shared-build-env
+      PLATFORM: ${PLATFORM:-rdk-arm}
+      CONFIG: ${CONFIG:-debug}
+      SB_API_VERSION: ${SB_API_VERSION}
+
   # Define common build container for Evergreen
   build-evergreen:
     <<: *build-common-definitions

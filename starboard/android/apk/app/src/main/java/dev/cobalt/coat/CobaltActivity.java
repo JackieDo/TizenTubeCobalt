@@ -26,6 +26,8 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Pair;
+import android.view.Surface;
+import android.view.Display;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.view.ViewParent;
@@ -435,6 +437,25 @@ public abstract class CobaltActivity extends GameActivity {
             if (getDisplay().isMinimalPostProcessingSupported()) {
               getWindow().setPreferMinimalPostProcessing(value);
             }
+          }
+        };
+
+    runOnUiThread(runnable);
+  }
+
+  public void setFrameRate(float frameRate, int strategy) {
+    if (Build.VERSION.SDK_INT < 30) {
+      return;
+    }
+
+    Runnable runnable =
+        new Runnable() {
+          @Override
+          public void run() {
+            Surface videoSurface = VideoSurfaceView.getCurrentSurface();
+            if (Build.VERSION.SDK_INT == 30) videoSurface.setFrameRate(frameRate, Surface.FRAME_RATE_COMPATIBILITY_FIXED_SOURCE);
+            else if (Build.VERSION.SDK_INT >= 31)
+              videoSurface.setFrameRate(frameRate, Surface.FRAME_RATE_COMPATIBILITY_FIXED_SOURCE, strategy);
           }
         };
 

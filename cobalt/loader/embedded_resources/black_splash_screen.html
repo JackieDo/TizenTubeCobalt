@@ -17,12 +17,48 @@
 <html>
 
 <head>
-  <meta http-equiv="Content-Security-Policy: style-src 'sha256-xmVxpUwZn65/t+v5EPwcm3g3WxZz1bJoPW/GtjJs75I=';">
+  <meta http-equiv="Content-Security-Policy" content="style-src 'unsafe-inline'; img-src * blob: data: h5vcc-embedded:;">
+  <style>
+    @keyframes indeterminate-bar {
+      0% {
+        left: 0%;
+        width: 0;
+      }
+      50% {
+        left: 0%;
+        width: 100%;
+      }
+      100% {
+        left: 100%;
+        width: 0;
+      }
+    }
+    .progress-container {
+      position: relative;
+      width: 300px;
+      height: 4px;
+      margin-top: 40px;
+      background-color: rgba(25, 118, 210, 0.3);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      background-color: #1976D2;
+      animation: indeterminate-bar 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+  </style>
 </head>
 
-<body style="background-color: #000000;">
-  <h1 style="color: #FFFFFF; text-align: center; margin-top: 20%; font-family: Arial, sans-serif;">
+<body style="background-color: #0f0f0f; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; margin: 0;">
+  <h1 style="color: #FFFFFF; font-size: 80px; font-family: Roboto,Noto Sans CJK ZH-HK,Noto Sans Thai,Arial,Helvetica,sans-serif; margin: 0;">
     TizenTube
   </h1>
+  <div class="progress-container">
+    <div class="progress-bar"></div>
+  </div>
 </body>
 </html>

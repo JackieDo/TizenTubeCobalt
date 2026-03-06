@@ -24,6 +24,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.hardware.input.InputManager;
+import android.hardware.display.DisplayManager;
 import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
 import android.net.ConnectivityManager;
@@ -35,6 +36,7 @@ import android.util.Pair;
 import android.util.Size;
 import android.util.SizeF;
 import android.view.Display;
+import android.view.Surface;
 import android.view.InputDevice;
 import android.view.accessibility.AccessibilityManager;
 import android.view.accessibility.CaptioningManager;
@@ -882,5 +884,66 @@ public class StarboardBridge {
   @UsedByNative
   protected String getBrandAndModel() {
     return Settings.Global.getString(appContext.getContentResolver(), "device_name");
+  }
+
+  @SuppressWarnings("unused")
+  @UsedByNative
+  protected String getArchitecture() {
+    return Build.SUPPORTED_ABIS[0];
+  }
+
+  @SuppressWarnings("unused")
+  @UsedByNative
+  protected void setFrameRate(float frameRate) {
+    if (Build.VERSION.SDK_INT < 30) {
+      return;
+    }
+
+    Activity activity = activityHolder.get();
+    if (activity == null) {
+      return;
+    }
+
+  Display defaultDisplay = activity.getWindowManager().getDefaultDisplay();
+  DisplayManager displayManager =
+      (DisplayManager) appContext.getSystemService(Context.DISPLAY_SERVICE);
+
+  boolean canBeSeamless = false;
+  int strategy = 1;
+  if (Build.VERSION.SDK_INT >= 31) {
+      float[] supportedRefreshRates = defaultDisplay.getMode().getAlternativeRefreshRates();
+      for (float rate : supportedRefreshRates) {
+        if (Math.abs(rate - frameRate) < 0.1f || isMultiple(rate, frameRate, 0.1f)) {
+          canBeSeamless = true;
+          break;
+        }
+      }
+
+      int contentPreference = displayManager.getMatchContentFrameRateUserPreference();
+      if (contentPreference == DisplayManager.MATCH_CONTENT_FRAMERATE_NEVER) return;
+      else if (contentPreference == DisplayManager.MATCH_CONTENT_FRAMERATE_SEAMLESSS_ONLY) {
+        if (canBeSeamless) {
+          strategy = Surface.CHANGE_FRAME_RATE_ONLY_IF_SEAMLESS;
+        }
+      } else if (contentPreference == DisplayManager.MATCH_CONTENT_FRAMERATE_ALWAYS) {
+        strategy = Surface.CHANGE_FRAME_RATE_ALWAYS;
+      } else {
+        strategy = Surface.CHANGE_FRAME_RATE_ALWAYS;
+      }
+    }
+
+    if (activity instanceof CobaltActivity) {
+      if (Build.VERSION.SDK_INT == 30) {
+        ((CobaltActivity) activity).setFrameRate(frameRate, 0);
+      } else if (Build.VERSION.SDK_INT >= 31) {
+        ((CobaltActivity) activity).setFrameRate(frameRate, strategy);
+      }
+    }
+  }
+
+  private static boolean isMultiple(float refreshRate, float fps, float tolerance) {
+    float ratio = refreshRate / fps;
+    float nearestInt = Math.round(ratio);
+    return Math.abs(ratio - nearestInt) < (tolerance / fps);
   }
 }

@@ -94,10 +94,39 @@ _FILTERED_TESTS = {
         'SysInfoTest.AmountOfFreeDiskSpace',
         'SysInfoTest.AmountOfTotalDiskSpace',
     ],
+    'nplb': [
+        'SbMediaCanPlayMimeAndKeySystem.MinimumSupport',
+        'SbMediaCanPlayMimeAndKeySystem.AnySupportedKeySystems',
+        'SbSystemGetLocaleIdTest.SunnyDay',
+        'SbSystemGetPropertyTest.ReturnsRequired',
+        'SbTimeZoneGetNameTest.IsIANAFormat',
+        'PosixSocketHints/PosixSocketResolveTest.Localhost/family_inet6_socktype*',
+        'SbSocketAddressTypes/SbSocketGetInterfaceAddressTest.SunnyDaySourceForDestination/type_ipv6',
+    ],
+    'layout_tests': [
+        'CSS3FontsLayoutTests/Layout.Test/*',
+    ],
+    'dom_test': [
+        'NavigatorTest.NavigatorOnline',
+    ],
+    'extension_test': [
+        'ExtensionTest.Graphics',
+    ],
+    'renderer_test': [
+        'PixelTest.SimpleTextInEthiopicBold',
+        'PixelTest.SimpleTextInRed40PtChineseFont',
+        'PixelTest.SimpleTextInRed40PtKatakanaJapaneseFont',
+        'PixelTest.SimpleTextInRed40PtHiranganaJapaneseFont',
+        'StressTest.TooManyTextures',
+    ],
+    'worker_test': [
+        'WorkerNavigatorTests/WorkerNavigatorTest.WorkerNavigatorOnline/DedicatedWorkerGlobalScope',
+        "WorkerNavigatorTests/WorkerNavigatorTest.WorkerNavigatorOnline/ServiceWorkerGlobalScope",
+    ],
 }
 
 
-class TestFilters(object):
+class RdkTestFilters(object):
   """Starboard RDK platform test filters."""
 
   def GetTestFilters(self):
@@ -108,4 +137,4 @@ class TestFilters(object):
 
 
 def CreateTestFilters():
-  return TestFilters()
+  return RdkTestFilters()

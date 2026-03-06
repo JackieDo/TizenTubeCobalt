@@ -34,11 +34,11 @@ RUN apt update -qqy \
 # Get the combined toolchains package.
 RUN cd /tmp \
     && curl --silent -O -J \
-    "https://storage.googleapis.com/cobalt-static-storage/${raspi_tools}" \
+    "https://storage.googleapis.com/cobalt-static-storage-public/${raspi_tools}" \
     && mkdir -p ${raspi_home} \
     && cd ${raspi_home} \
     && tar xjvf /tmp/${raspi_tools} --no-same-owner \
     && rm /tmp/${raspi_tools}
 
-CMD gn gen ${OUTDIR}/${PLATFORM}${SB_API_VERSION:+-sbversion-$SB_API_VERSION}_${CONFIG:-debug} --args="target_platform=\"${PLATFORM}\" build_type=\"${CONFIG:-debug}\" target_cpu=\"arm\" is_clang=false ${SB_API_VERSION:+sb_api_version=$SB_API_VERSION}" && \
+CMD gn gen ${OUTDIR}/${PLATFORM}${SB_API_VERSION:+-sbversion-$SB_API_VERSION}_${CONFIG:-debug} --args="target_platform=\"${PLATFORM}\" build_type=\"${CONFIG:-debug}\" target_cpu=\"arm\" target_os=\"linux\" build_with_separate_cobalt_toolchain=true use_asan=false ${SB_API_VERSION:+sb_api_version=$SB_API_VERSION}" && \
     ninja -v -j ${NINJA_PARALLEL} -C ${OUTDIR}/${PLATFORM}${SB_API_VERSION:+-sbversion-$SB_API_VERSION}_${CONFIG:-debug} ${TARGET:-cobalt_install}

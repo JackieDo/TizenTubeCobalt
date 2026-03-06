@@ -80,7 +80,7 @@ android {
         minSdkVersion MIN_SUPPORTED_SDK_VERSION
         targetSdkVersion LATEST_SUPPORTED_SDK_VERSION
         compileSdkVersion LATEST_SUPPORTED_SDK_VERSION
-        versionCode 106
+        versionCode 108
         versionName "${buildId}"
         manifestPlaceholders = [
             applicationName: "TizenTube",

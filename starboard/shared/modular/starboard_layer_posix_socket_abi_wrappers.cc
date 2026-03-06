@@ -13,15 +13,20 @@
 // limitations under the License.
 
 #include "starboard/shared/modular/starboard_layer_posix_socket_abi_wrappers.h"
+
 #include <stdlib.h>
 #include <string.h>
+#include <algorithm>
 
-#if SB_HAS_QUIRK(SOCKADDR_WITH_LENGTH)
-#include <net.h>
-#endif
 #include "starboard/log.h"
 
 namespace {
+
+// Ensure that |struct musl_sockaddr| is large enough to hold either
+// |struct sockaddr_in| or |struct sockaddr_in6| on this platform.
+static_assert(sizeof(struct musl_sockaddr) >= sizeof(struct sockaddr_in));
+static_assert(sizeof(struct musl_sockaddr) >= sizeof(struct sockaddr_in6));
+
 // Corresponding arrays to for musl<->platform translation.
 int MUSL_AI_ORDERED[] = {
     MUSL_AI_PASSIVE, MUSL_AI_CANONNAME,  MUSL_AI_NUMERICHOST, MUSL_AI_V4MAPPED,
@@ -132,57 +137,20 @@ int platform_hints_to_musl_hints(const struct addrinfo* hints,
 SB_EXPORT int __abi_wrap_accept(int sockfd,
                                 musl_sockaddr* addr,
                                 socklen_t* addrlen_ptr) {
-#if SB_HAS_QUIRK(SOCKADDR_WITH_LENGTH)
-  if (addr != nullptr) {
-    struct sockaddr new_addr = {};
-    new_addr.sa_family = addr->sa_family;
-    new_addr.sa_len = 0;
-    memcpy(new_addr.sa_data, addr->sa_data, 14);
-    addr = reinterpret_cast<musl_sockaddr*>(&new_addr);
-  }
-#endif
   return accept(sockfd, reinterpret_cast<struct sockaddr*>(addr), addrlen_ptr);
 }
 
 SB_EXPORT int __abi_wrap_bind(int sockfd,
                               const musl_sockaddr* addr,
                               socklen_t addrlen) {
-#if SB_HAS_QUIRK(SOCKADDR_WITH_LENGTH)
-  if (addr != nullptr) {
-    struct sockaddr new_addr = {};
-    new_addr.sa_family = addr->sa_family;
-    new_addr.sa_len = 0;
-    memcpy(new_addr.sa_data, addr->sa_data, 14);
-    return bind(sockfd, reinterpret_cast<const struct sockaddr*>(&new_addr),
-                addrlen);
-  } else {
-    return bind(sockfd, reinterpret_cast<const struct sockaddr*>(addr),
-                addrlen);
-  }
-#else
   return bind(sockfd, reinterpret_cast<const struct sockaddr*>(addr), addrlen);
-#endif
 }
 
 SB_EXPORT int __abi_wrap_connect(int sockfd,
                                  const musl_sockaddr* addr,
                                  socklen_t addrlen) {
-#if SB_HAS_QUIRK(SOCKADDR_WITH_LENGTH)
-  if (addr != nullptr) {
-    struct sockaddr new_addr = {};
-    new_addr.sa_family = addr->sa_family;
-    new_addr.sa_len = 0;
-    memcpy(new_addr.sa_data, addr->sa_data, 14);
-    return connect(sockfd, reinterpret_cast<const struct sockaddr*>(&new_addr),
-                   addrlen);
-  } else {
-    return connect(sockfd, reinterpret_cast<const struct sockaddr*>(addr),
-                   addrlen);
-  }
-#else
   return connect(sockfd, reinterpret_cast<const struct sockaddr*>(addr),
                  addrlen);
-#endif
 }
 
 SB_EXPORT int __abi_wrap_getaddrinfo(const char* node,
@@ -269,17 +237,17 @@ SB_EXPORT int __abi_wrap_getaddrinfo(const char* node,
         free(musl_ai);
         return -1;
       }
-      musl_ai->ai_addrlen = ai_copy.ai_addrlen;
-      musl_ai->ai_addr =
-          (struct musl_sockaddr*)calloc(1, sizeof(struct musl_sockaddr));
+      musl_ai->ai_addrlen =
+          std::min(static_cast<uint32_t>(ai_copy.ai_addrlen),
+                   static_cast<uint32_t>(sizeof(struct musl_sockaddr)));
+      musl_ai->ai_addr = (struct musl_sockaddr*)calloc(1, musl_ai->ai_addrlen);
+      memcpy(musl_ai->ai_addr, ai_copy.ai_addr, musl_ai->ai_addrlen);
+      // Ensure that the sa_family value is translated if the platform value
+      // differs from the musl value.
       for (int i = 0; i < sizeof(PLATFORM_AF_ORDERED) / sizeof(int); i++) {
         if (ai_copy.ai_addr->sa_family == PLATFORM_AF_ORDERED[i]) {
           musl_ai->ai_addr->sa_family = MUSL_AF_ORDERED[i];
         }
-      }
-      if (ai_copy.ai_addr->sa_data != nullptr) {
-        memcpy(musl_ai->ai_addr->sa_data, ai_copy.ai_addr->sa_data,
-               sizeof(ai_copy.ai_addr->sa_data));
       }
       if (ai_copy.ai_canonname) {
         size_t canonname_len = strlen(ai_copy.ai_canonname);
@@ -345,60 +313,6 @@ SB_EXPORT int __abi_wrap_setsockopt(int socket,
   if (socket <= 0) {
     return -1;
   }
-  int is_supported = 1;
 
-#if SB_HAS_QUIRK(SOCKADDR_WITH_LENGTH)
-
-  // The value from POSIX
-#define MUSL_SOL_SOCKET 1  // level
-#define MUSL_SO_REUSEADDR 2
-#define MUSL_SO_RCVBUF 8
-#define MUSL_SO_SNDBUF 7
-#define MUSL_SO_KEEPALIVE 9
-
-#define MUSL_SOL_TCP 6  // level
-#define MUSL_TCP_NODELAY 1
-#define MUSL_TCP_KEEPIDLE 4
-#define MUSL_TCP_KEEPINTVL 5
-
-#define MUSL_IPPROTO_TCP 6  // level
-
-  if (level == MUSL_SOL_SOCKET) {
-    level = SOL_SOCKET;
-    switch (option_name) {
-      case MUSL_SO_REUSEADDR:
-        option_name = SO_REUSEADDR;
-        break;
-      case MUSL_SO_RCVBUF:
-        option_name = SO_RCVBUF;
-        break;
-      case MUSL_SO_SNDBUF:
-        option_name = SO_SNDBUF;
-        break;
-      case MUSL_SO_KEEPALIVE:
-        is_supported = 0;
-        break;
-      default:
-        is_supported = 0;
-    }
-  }
-  if (level == MUSL_IPPROTO_TCP) {
-    level = IPPROTO_TCP;
-    switch (option_name) {
-      case MUSL_TCP_NODELAY:
-        option_name = SCE_NET_TCP_NODELAY;
-        break;
-      default:
-        is_supported = 0;
-    }
-  }
-  if (level = MUSL_SOL_TCP) {
-    is_supported = 0;
-  }
-#endif
-
-  if (is_supported) {
-    return setsockopt(socket, level, option_name, option_value, option_len);
-  }
-  return 0;
+  return setsockopt(socket, level, option_name, option_value, option_len);
 }

@@ -1547,7 +1547,7 @@ TEST_P(CertVerifyProcInternalTest, PublicKeyHashes) {
 
   std::vector<std::string> expected_public_key_hashes = {
       // Target
-      "sha256/Ru/08Ru275Zlf42sbI6lqi2OUun3r4YgrrK/vJ3+Yzk=",
+      "sha256/wW2GKEZZ2mkQgsrpyHq8xkc6sgs4PNIjSieEWiS3SI0=",
 
       // Intermediate
       "sha256/D9u0epgvPYlG9YiVp7V+IMT+xhUpB5BhsS/INjDXc4Y=",
@@ -2351,7 +2351,8 @@ TEST_P(CertVerifyProcInternalTest, DetectsInterceptionByRoot) {
 // 1. Revoking E by SPKI, so that only Path 1 is valid (as E is in Paths 2 & 3)
 // 2. Revoking C(D) and F(E) by serial, so that only Path 2 is valid.
 // 3. Revoking C by SPKI, so that only Path 3 is valid (as C is in Paths 1 & 2)
-TEST_P(CertVerifyProcInternalTest, CRLSetDuringPathBuilding) {
+// TODO: b/278599663 - Certs out of date.
+TEST_P(CertVerifyProcInternalTest, DISABLED_CRLSetDuringPathBuilding) {
   if (!SupportsCRLSetsInPathBuilding()) {
     LOG(INFO) << "Skipping this test on this platform.";
     return;

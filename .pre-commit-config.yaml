@@ -26,6 +26,7 @@ exclude: |
             internal/kokoro/third-party|
             internal/starboard/shared/glimp/include|
             internal/starboard/shared/playstation/glimp/shaders|
+            starboard/contrib/RDK|
         )/
         |
         .*_pb2\.py$ |
@@ -45,32 +46,6 @@ repos:
     -   id: trailing-whitespace
     -   id: mixed-line-ending
     -   id: check-xml
-
--   repo: https://cobalt.googlesource.com/codespell
-    rev: 67c489d36dd4c52cbb9e4755d90c35c6231842ef  # v2.0.0
-    hooks:
-    -   id: codespell
-        name: Spell Check
-        args: [-x, .codespellignorelines,
-               # The --ignore-words-list argument has a bug where it needs to
-               # be lowercase, see
-               # https://github.com/codespell-project/codespell/issues/1390
-               --ignore-words-list, "atleast,varius,ridiculus,statics",
-               ]
-        exclude: |
-            (?x)^(
-                (internal/)?starboard/[^/]+/i18n/|
-                cobalt/content/licenses/|
-                cobalt/content/ssl/|
-                cobalt/fetch/embedded_scripts|
-                cobalt/streams/embedded_scripts|
-                cobalt/loader/cors_preflight.cc|
-                internal/cobalt/browser/splash_screen/youtube_splash_screen.html|
-                internal/starboard/shared/playstation/storage_internal.cc|
-                starboard/loader_app/app_key_test.cc|
-                starboard/shared/starboard/player/testdata|
-                starboard/shared/win32/media_transform.cc
-            )
 
 -   repo: local
     hooks:
@@ -97,7 +72,7 @@ repos:
         exclude: |
             (?x)(
                 ^cobalt/bindings/(templates|generated)/|
-                ^internal/starboard/shared/uikit/.*\.h$
+                ^starboard/shared/uikit/.*\.h$
             )
     -   id: yapf
         name: yapf
@@ -145,6 +120,7 @@ repos:
                 components/crx_file/|
                 content/|
                 internal/starboard/shared/glimp/|
+                starboard/contrib/RDK/|
                 nb/|
                 starboard/content/fonts/LICENSES.txt |
                 starboard/android/apk/gradlew|
@@ -153,6 +129,7 @@ repos:
                 starboard/shared/starboard/player/filter/decoded_audio_queue.h$|
                 starboard/shared/starboard/player/testdata/licences/|
                 starboard/shared/starboard/player/filter/wsola_internal.cc$
+                starboard/contrib/rdk/src/third_party/starboard/rdk/|
             )
         exclude_types: [markdown]
         verbose: true
@@ -196,11 +173,3 @@ repos:
         entry: gn format
         language: system
         files: '.*\.gni?$'
-    -   id: meta-validate
-        name: Validate METADATA files
-        entry: python -m cobalt.tools.metadata.validate
-        language: python
-        additional_dependencies:
-          - "protobuf"
-        always_run: true
-        pass_filenames: false

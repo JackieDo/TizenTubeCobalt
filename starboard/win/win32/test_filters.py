@@ -41,6 +41,7 @@ _FILTERED_TESTS = {
         'SbPlayerWriteSampleTests/SbPlayerWriteSampleTest.SecondaryPlayerTest/*',
 
         # Failures tracked by b/256160416.
+        'PosixSocketHints/PosixSocketResolveTest.SunnyDayHints/family_inet6_*',
         'SbSystemGetPathTest.ReturnsRequiredPaths',
         'SbPlayerGetAudioConfigurationTests/*_video_beneath_the_canopy_137_avc_dmp_output_decode_to_texture_*',
         'SbPlayerGetMediaTimeTests/*_video_beneath_the_canopy_137_avc_dmp_output_decode_to_texture_*',
@@ -59,9 +60,6 @@ _FILTERED_TESTS = {
 
         # Enable once verified on the platform.
         'SbMediaCanPlayMimeAndKeySystem.MinimumSupport',
-
-        # TODO: b/349109647 Disable flaky test.
-        'SbPlayerGetMediaTimeTests/*',
     ],
     'player_filter_tests': [
         # These tests fail on our VMs for win-win32 builds due to missing

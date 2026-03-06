@@ -16,6 +16,6 @@
 -->
 
 <resources>
-  <color name="cobalt_blue">#ff16396b</color>
-  <color name="primary">@color/cobalt_blue</color>
+  <color name="cobalt_gray">#0f0f0f</color>
+  <color name="primary">@color/cobalt_gray</color>
 </resources>
